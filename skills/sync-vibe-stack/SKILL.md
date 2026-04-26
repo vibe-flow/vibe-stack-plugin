@@ -200,6 +200,27 @@ apps/api/src/modules/ai/ai.trpc.ts
 
 **Attendre la validation de l'utilisateur** avant de passer au commit.
 
+### Step 7bis — Synchroniser la section conventions du CLAUDE.md projet
+
+Le CLAUDE.md du projet contient une section "Conventions vibe-stack" gérée par le plugin, délimitée par :
+
+```
+<!-- vibe-stack-plugin:conventions:start -->
+...
+<!-- vibe-stack-plugin:conventions:end -->
+```
+
+1. Lire le CLAUDE.md du projet courant.
+2. Détecter le bloc entre les markers.
+   - Si **aucun bloc** → demander à l'utilisateur :
+     > Le CLAUDE.md de ce projet ne contient pas la section conventions vibe-stack. Veux-tu que je l'ajoute ?
+     Si oui, l'insérer à la fin du CLAUDE.md.
+3. Lire le bloc équivalent dans `~/Dev/vibe-stack/CLAUDE.md` (template upstream).
+4. Si le contenu **diffère**, remplacer le contenu du bloc projet par celui du template.
+5. Si **identique**, noter "Conventions CLAUDE.md : à jour".
+
+Cette étape garantit que les conventions vibe-stack restent synchronisées avec le template, sans toucher au reste du CLAUDE.md projet (description métier, sections custom).
+
 ### Step 8 — Mettre à jour le lock et commiter
 
 Une fois l'utilisateur satisfait :

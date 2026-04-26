@@ -10,19 +10,28 @@ Plugin Claude Code packageant l'écosystème de développement **vibe-stack** : 
 
 ## Skills disponibles
 
-- **`vibe-stack:help`** — cette aide
-- **`vibe-stack:sync-vibe-stack`** — Synchronise le code template vibe-stack et les modules vers le projet courant. Détecte les releases disponibles, applique les diffs intelligemment et met à jour le `.flow/vibe-stack-lock.json`.
+### Workflow projet
 
-## À venir
+- **`vibe-stack:init-project`** — Bootstrap d'un nouveau projet depuis le template vibe-stack.
+- **`vibe-stack:import-module`** — Importer un module réutilisable depuis `~/Dev/vibe-stack-modules/`.
+- **`vibe-stack:export-module`** — Extraire une feature d'un projet vers un module réutilisable.
+- **`vibe-stack:sync-vibe-stack`** — Synchroniser le code template et les modules vers le projet courant. Met aussi à jour la section conventions du CLAUDE.md projet.
+- **`vibe-stack:upstream-vibe-stack`** — Remonter une amélioration vers le template vibe-stack ou vibe-stack-modules.
 
-Prochaines skills à migrer depuis `~/.claude/skills/` :
+### Déploiement
 
-- `import-module` / `export-module` — Gestion des modules vibe-stack
-- `deploy` / `deploy-setup` — Déploiement de projets vibe-stack
-- `release` / `release-vibe-stack` — Releases du template vibe-stack
-- `init-project` — Bootstrap d'un nouveau projet vibe-stack
-- `hotfix` — Workflow hotfix
-- `commit` — Commits structurés
+- **`vibe-stack:deploy-setup`** — Scaffold de l'infrastructure de déploiement (Dockerfiles, workflows, Caddy).
+- **`vibe-stack:deploy`** — Déployer le projet en production (commit, push, monitor GitHub Actions, vérif santé serveur).
+- **`vibe-stack:release`** — Diff dev/prod, merge vers prod et déploiement.
+- **`vibe-stack:hotfix`** — Cherry-pick d'un commit vers la branche de production et déploiement.
+
+### Maintenance du template
+
+- **`vibe-stack:release-vibe-stack`** — Publier une nouvelle version du template vibe-stack avec tag git, notes et instructions d'intégration.
+
+### Aide
+
+- **`vibe-stack:help`** — Cette aide.
 
 ## Liens
 
