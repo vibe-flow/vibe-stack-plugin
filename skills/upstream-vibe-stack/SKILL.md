@@ -72,7 +72,8 @@ Analyser la nature du changement :
 |--------|-------------|--------|
 | Code d'un module (service, component, hook) | `~/Dev/vibe-stack-modules/modules/<name>/` | Mettre a jour le module |
 | Boilerplate, config, structure de projet | `~/Dev/vibe-stack/` | Mettre a jour le template |
-| Conventions, regles, patterns documentes | `~/.claude/shared/vibe-stack.md` | Mettre a jour les conventions |
+| Conventions, regles, patterns documentes | `~/Dev/vibe-stack/CLAUDE.md` (section entre `<!-- vibe-stack-plugin:conventions:start/end -->`) | Mettre a jour les conventions du template |
+| Skill ou commande Claude Code | `~/Dev/vibe-stack-plugin/skills/<name>/SKILL.md` | Mettre a jour ou creer une skill du plugin |
 
 Si ambigu, demander a l'utilisateur.
 
@@ -85,7 +86,7 @@ Montrer a l'utilisateur :
 Amelioration detectee : [description]
 
 Source : [fichiers/commits dans le projet]
-Destination : [vibe-stack | vibe-stack-modules/modules/<name> | ~/.claude/shared/vibe-stack.md]
+Destination : [vibe-stack | vibe-stack-modules/modules/<name> | vibe-stack/CLAUDE.md (conventions) | vibe-stack-plugin/skills/<name>]
 
 Changements a appliquer :
   - [resume des modifications]
@@ -105,7 +106,7 @@ Si le code contient des specificites du projet :
 - Retirer les imports de services specifiques au projet
 - Suivre les conventions de `~/Dev/vibe-stack-modules/CONTRIBUTING.md` si c'est un module
 
-Si c'est une convention/regle : formuler de maniere generique pour vibe-stack.md
+Si c'est une convention/regle : formuler de maniere generique pour la section conventions du `vibe-stack/CLAUDE.md`.
 
 ## Step 7 — Appliquer dans le repo cible
 
@@ -126,10 +127,24 @@ Si c'est une convention/regle : formuler de maniere generique pour vibe-stack.md
    cd ~/Dev/vibe-stack && git add . && git commit && git push
    ```
 
-### Si destination = vibe-stack.md
+### Si destination = conventions vibe-stack (CLAUDE.md du template)
 
-1. Modifier `~/.claude/shared/vibe-stack.md`
-2. Pas de git (c'est un fichier local partage)
+1. Modifier la section entre `<!-- vibe-stack-plugin:conventions:start -->` et `<!-- vibe-stack-plugin:conventions:end -->` dans `~/Dev/vibe-stack/CLAUDE.md`.
+2. Commiter et pusher :
+   ```
+   cd ~/Dev/vibe-stack && git add CLAUDE.md && git commit && git push
+   ```
+3. Cette modification sera propagee aux projets existants via `/sync-vibe-stack` (Step 7bis).
+
+### Si destination = skill du plugin
+
+1. Modifier ou creer le fichier dans `~/Dev/vibe-stack-plugin/skills/<name>/SKILL.md`.
+2. Bumper la version dans `.claude-plugin/plugin.json` et `.claude-plugin/marketplace.json`.
+3. Commiter, tagger et pusher :
+   ```
+   cd ~/Dev/vibe-stack-plugin && git add . && git commit && git tag -a vX.Y.Z -m "..." && git push --follow-tags
+   ```
+4. Les utilisateurs recuperent la mise a jour via `claude plugin update vibe-stack@vibe-stack`.
 
 ## Step 8 — Mettre a jour le lock du projet
 
@@ -143,9 +158,13 @@ Mettre a jour `core.commit` et `core.date` dans `.flow/vibe-stack-lock.json` ver
 
 Mettre a jour le `commit` et la `date` du module dans `.flow/vibe-stack-lock.json` vers le commit qui vient d'etre cree. Le mapping `files` reste inchange (sauf si de nouveaux fichiers ont ete ajoutes au module, auquel cas les ajouter).
 
-### Si destination = vibe-stack.md
+### Si destination = conventions du CLAUDE.md template
 
-Pas de lock a mettre a jour (fichier local).
+Pas de lock a mettre a jour. La propagation se fait via `/sync-vibe-stack` qui met aussi a jour la section entre les markers du CLAUDE.md projet.
+
+### Si destination = skill du plugin
+
+Pas de lock a mettre a jour. La propagation se fait via `claude plugin update`.
 
 ### Commit du lock
 
@@ -165,7 +184,7 @@ recuperer cette amelioration via /sync-vibe-stack
 
 ## Repos de reference
 
-- Template vibe-stack : `~/Dev/vibe-stack/`
+- Template vibe-stack : `~/Dev/vibe-stack/` (boilerplate + conventions inlinees dans le CLAUDE.md)
 - Modules : `~/Dev/vibe-stack-modules/`
-- Conventions partagees : `~/.claude/shared/vibe-stack.md`
+- Plugin Claude Code : `~/Dev/vibe-stack-plugin/` (skills + commandes)
 - Lock file : `.flow/vibe-stack-lock.json` (dans le projet courant)

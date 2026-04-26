@@ -85,7 +85,7 @@ If deploy.json already EXISTS and has no `caddy.mode`: check if it uses network 
 
 If NOT_FOUND or does NOT contain `FROM oven/bun` (old single-stage):
 
-Read the template at `~/.claude/skills/deploy-setup/templates/Dockerfile.api.template` and create `Dockerfile.api`.
+Read the template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/Dockerfile.api.template` and create `Dockerfile.api`.
 
 **CRITICAL — Docker build pattern (proven on all vibe-stack projects):**
 - Stage 2 (build) MUST copy **only** `packages/shared/`, `apps/api/`, and `prisma/` — **NOT** `COPY . .` (copying `apps/web/` causes SWC to hang resolving unused deps)
@@ -103,13 +103,13 @@ Adapt if the project has different workspace structure (check `package.json` wor
 
 If NOT_FOUND or does NOT contain `FROM oven/bun` (old single-stage):
 
-Read the template at `~/.claude/skills/deploy-setup/templates/Dockerfile.web.template` and create `Dockerfile.web`.
+Read the template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/Dockerfile.web.template` and create `Dockerfile.web`.
 
 ### 4. .dockerignore
 
 If NOT_FOUND:
 
-Read the template at `~/.claude/skills/deploy-setup/templates/dockerignore.template` and create `.dockerignore`.
+Read the template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/dockerignore.template` and create `.dockerignore`.
 
 ### 5. .env.build
 
@@ -126,8 +126,8 @@ Ask the user if these values are correct for their project.
 ### 6. docker-compose.prod.yml
 
 If NOT_FOUND:
-- If `caddy.mode` is `"shared"` (or not set): Read template at `~/.claude/skills/deploy-setup/templates/docker-compose.prod.template.yml`
-- If `caddy.mode` is `"standalone"`: Read template at `~/.claude/skills/deploy-setup/templates/docker-compose.prod.standalone.template.yml`
+- If `caddy.mode` is `"shared"` (or not set): Read template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/docker-compose.prod.template.yml`
+- If `caddy.mode` is `"standalone"`: Read template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/docker-compose.prod.standalone.template.yml`
 - Create `docker-compose.prod.yml`, filling in values from deploy.json.
 
 **IMPORTANT — PostgreSQL image selection (standalone mode):**
@@ -151,8 +151,8 @@ If EXISTS but uses `build:` instead of `image:`: Propose migration — replace `
 
 If NOT_FOUND or needs update:
 
-- **Always use the standalone template** at `~/.claude/skills/deploy-setup/templates/deploy-workflow.standalone.template.yml` (self-contained inline workflow). Reusable workflows from private repos cause `startup_failure` on personal accounts and free orgs.
-- The shared (reusable) template at `~/.claude/skills/deploy-setup/templates/deploy-workflow.template.yml` should only be used if the user explicitly requests it AND has a GitHub Team/Enterprise plan.
+- **Always use the standalone template** at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/deploy-workflow.standalone.template.yml` (self-contained inline workflow). Reusable workflows from private repos cause `startup_failure` on personal accounts and free orgs.
+- The shared (reusable) template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/deploy-workflow.template.yml` should only be used if the user explicitly requests it AND has a GitHub Team/Enterprise plan.
 
 **IMPORTANT**: The `{PROJECT_DIR}` placeholder MUST be an absolute path (e.g. `/home/debian/zeendoc`), NOT use `~` — GitHub Actions does not expand `~` in `working-directory`.
 
@@ -464,7 +464,7 @@ Behavior depends on `caddy.mode` in deploy.json:
 
 #### Mode `shared` (default — server-infra Caddy)
 
-Read the template at `~/.claude/skills/deploy-setup/templates/caddyfile-block.template`.
+Read the template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/caddyfile-block.template`.
 
 Generate the Caddy block by replacing `{PROJECT_NAME}`, `{DOMAINS}`, `{CONTAINER_PREFIX}` from deploy.json.
 
@@ -498,7 +498,7 @@ grep "{first_domain}" ~/Dev/server-infra/caddy/Caddyfile 2>/dev/null
 
 #### Mode `standalone` (Caddy in project compose)
 
-Read the template at `~/.claude/skills/deploy-setup/templates/Caddyfile.standalone.template`.
+Read the template at `${CLAUDE_PLUGIN_ROOT}/skills/deploy-setup/templates/Caddyfile.standalone.template`.
 
 Generate a `Caddyfile` at the project root by replacing `{DOMAINS}` and `{CONTAINER_PREFIX}` from deploy.json.
 
