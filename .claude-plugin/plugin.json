@@ -1,7 +1,7 @@
 {
   "name": "vibe-stack",
   "description": "Skills, commands and conventions for the vibe-stack monorepo ecosystem (Bun + NestJS + React/Vite + tRPC + Prisma + Zod).",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": {
     "name": "Florian Brotte",
     "email": "contact@fbrotte.fr",
@@ -19,6 +19,5 @@
     "prisma",
     "monorepo"
   ],
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
