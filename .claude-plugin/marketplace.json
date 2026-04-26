@@ -1,0 +1,17 @@
+{
+  "name": "vibe-stack",
+  "owner": {
+    "name": "vibe-flow",
+    "url": "https://github.com/vibe-flow"
+  },
+  "plugins": [
+    {
+      "name": "vibe-stack",
+      "source": "./",
+      "description": "Skills, commands and conventions for the vibe-stack monorepo ecosystem.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["vibe-stack", "bun", "nestjs", "react", "trpc"]
+    }
+  ]
+}
