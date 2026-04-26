@@ -78,7 +78,7 @@ async function pickPort(
   return findFreePort(fallbackStart, exclude)
 }
 
-function findMainRepoEnv(): string | null {
+function getMainRepoRoot(): string | null {
   try {
     const commonDir = execSync('git rev-parse --git-common-dir', {
       cwd: PROJECT_ROOT,
@@ -88,11 +88,17 @@ function findMainRepoEnv(): string | null {
     const absCommonDir = isAbsolute(commonDir) ? commonDir : resolve(PROJECT_ROOT, commonDir)
     const mainRoot = dirname(absCommonDir)
     if (resolve(mainRoot) === resolve(PROJECT_ROOT)) return null // pas un worktree
-    const mainEnv = join(mainRoot, '.env')
-    return existsSync(mainEnv) ? mainEnv : null
+    return mainRoot
   } catch {
     return null
   }
+}
+
+function findMainRepoEnv(): string | null {
+  const mainRoot = getMainRepoRoot()
+  if (!mainRoot) return null
+  const mainEnv = join(mainRoot, '.env')
+  return existsSync(mainEnv) ? mainEnv : null
 }
 
 function generateSecret(): string {
@@ -143,11 +149,25 @@ async function main() {
   const existingContent = existsSync(ENV_LOCAL) ? readFileSync(ENV_LOCAL, 'utf-8') : ''
   const existing = parseEnv(existingContent)
 
-  const currentFrontend = parseInt(existing.FRONTEND_PORT ?? '0', 10) || 0
-  const currentBackend = parseInt(existing.BACKEND_PORT ?? '0', 10) || 0
+  const isWorktree = getMainRepoRoot() !== null
 
-  const frontendPort = await pickPort(currentFrontend, FRONTEND_DEFAULT, new Set([currentBackend]))
-  const backendPort = await pickPort(currentBackend, BACKEND_DEFAULT, new Set([frontendPort]))
+  let frontendPort: number
+  let backendPort: number
+
+  if (isWorktree) {
+    // Worktree : isoler sur des ports libres pour ne pas entrer en conflit avec
+    // les autres worktrees ou le repo principal.
+    const currentFrontend = parseInt(existing.FRONTEND_PORT ?? '0', 10) || 0
+    const currentBackend = parseInt(existing.BACKEND_PORT ?? '0', 10) || 0
+    frontendPort = await pickPort(currentFrontend, FRONTEND_DEFAULT, new Set([currentBackend]))
+    backendPort = await pickPort(currentBackend, BACKEND_DEFAULT, new Set([frontendPort]))
+  } else {
+    // Repo principal : toujours utiliser les ports de base, sans scanner.
+    // Plusieurs sessions Claude Code sur le repo principal partagent ces ports
+    // (une seule fait tourner le dev server a la fois).
+    frontendPort = FRONTEND_DEFAULT
+    backendPort = BACKEND_DEFAULT
+  }
 
   const updates: Record<string, string> = {
     FRONTEND_PORT: String(frontendPort),
