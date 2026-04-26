@@ -158,23 +158,42 @@ async function main() {
   if (nextContent !== existingContent) writeFileSync(ENV_LOCAL, nextContent)
 
   mkdirSync(dirname(LAUNCH_JSON), { recursive: true })
-  const launch = {
+
+  let launch: { version: string; configurations: Array<Record<string, unknown>> } = {
     version: '0.0.1',
-    configurations: [
-      {
-        name: 'web',
-        runtimeExecutable: 'bun',
-        runtimeArgs: ['run', 'dev:web'],
-        port: frontendPort,
-      },
-      {
-        name: 'api',
-        runtimeExecutable: 'bun',
-        runtimeArgs: ['run', 'dev:api'],
-        port: backendPort,
-      },
-    ],
+    configurations: [],
   }
+  if (existsSync(LAUNCH_JSON)) {
+    try {
+      const parsed = JSON.parse(readFileSync(LAUNCH_JSON, 'utf-8'))
+      launch = {
+        version: typeof parsed?.version === 'string' ? parsed.version : '0.0.1',
+        configurations: Array.isArray(parsed?.configurations) ? parsed.configurations : [],
+      }
+    } catch {
+      // launch.json corrompu : on repart d'un launch vide
+    }
+  }
+
+  const managed = new Set(['web', 'api'])
+  const preserved = launch.configurations.filter((c) => !managed.has(c?.name as string))
+
+  launch.configurations = [
+    ...preserved,
+    {
+      name: 'web',
+      runtimeExecutable: 'bun',
+      runtimeArgs: ['run', 'dev:web'],
+      port: frontendPort,
+    },
+    {
+      name: 'api',
+      runtimeExecutable: 'bun',
+      runtimeArgs: ['run', 'dev:api'],
+      port: backendPort,
+    },
+  ]
+
   writeFileSync(LAUNCH_JSON, JSON.stringify(launch, null, 2) + '\n')
 
   console.log(`Vibe Stack ports: web=${frontendPort}, api=${backendPort}`)
