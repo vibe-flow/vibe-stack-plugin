@@ -25,6 +25,10 @@ Plugin Claude Code packageant l'écosystème de développement **vibe-stack** : 
 - **`vibe-stack:release`** — Diff dev/prod, merge vers prod et déploiement.
 - **`vibe-stack:hotfix`** — Cherry-pick d'un commit vers la branche de production et déploiement.
 
+### Git
+
+- **`vibe-stack:commit`** — Commit git intelligent : analyse les diffs, nettoie le code, découpe en commits logiques avec Conventional Commits. Gère les mono-repos et dossiers multi-repos.
+
 ### Maintenance du template
 
 - **`vibe-stack:release-vibe-stack`** — Publier une nouvelle version du template vibe-stack avec tag git, notes et instructions d'intégration.
