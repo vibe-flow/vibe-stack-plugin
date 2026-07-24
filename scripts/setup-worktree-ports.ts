@@ -13,7 +13,7 @@
 // Detection projet : early exit si .flow/project.json absent (= pas un projet Vibe Stack).
 
 import { createServer } from 'node:net'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { execSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
@@ -101,10 +101,56 @@ function upsertEnv(content: string, updates: Record<string, string>): string {
 async function pickPort(
   current: number,
   fallbackStart: number,
-  exclude: Set<number>
+  sibling: number,
+  taken: Set<number>
 ): Promise<number> {
-  if (current && !exclude.has(current) && (await isFree(current))) return current
-  return findFreePort(fallbackStart, exclude)
+  // Un port deja assigne au projet (present dans .env.local) est CONSERVE tel quel,
+  // meme s'il est occupe : il l'est quasi toujours par le propre dev server du projet.
+  // Le reverifier avec isFree() le jugeait "occupe" et en reallouait un nouveau a
+  // chaque SessionStart -> proxy Vite vers le mauvais port, instances zombies, chaos.
+  //
+  // Les ports des voisins ne le remettent PAS en cause non plus : une collision
+  // deja installee se resout une fois, a la main, pas en deplacant un projet a
+  // chaque demarrage. Ils ne comptent qu'a la premiere allocation, ci-dessous.
+  if (current && current !== sibling) return current
+  return findFreePort(fallbackStart, new Set([...taken, sibling]))
+}
+
+/**
+ * Ports deja reserves par les AUTRES projets flow du meme dossier parent.
+ *
+ * isFree() ne voit qu'un port occupe a l'instant T : un projet dont le serveur
+ * est eteint passe pour libre, et on lui vole ses ports. Au prochain demarrage
+ * les deux projets se disputent le meme port. On lit donc les .env.local
+ * voisins, qui sont la reservation durable.
+ */
+function reservedByOtherProjects(): Set<number> {
+  const reserved = new Set<number>()
+  const workspace = dirname(PROJECT_ROOT)
+  let entries: string[]
+  try {
+    entries = readdirSync(workspace)
+  } catch {
+    return reserved
+  }
+
+  for (const entry of entries) {
+    const dir = join(workspace, entry)
+    if (resolve(dir) === resolve(PROJECT_ROOT)) continue
+    if (!existsSync(join(dir, '.flow/project.json'))) continue
+    const envLocal = join(dir, '.env.local')
+    if (!existsSync(envLocal)) continue
+    try {
+      const vars = parseEnv(readFileSync(envLocal, 'utf-8'))
+      for (const key of ['FRONTEND_PORT', 'BACKEND_PORT']) {
+        const port = parseInt(vars[key] ?? '', 10)
+        if (port) reserved.add(port)
+      }
+    } catch {
+      // .env.local illisible : on l'ignore plutot que de bloquer le demarrage
+    }
+  }
+  return reserved
 }
 
 function getMainRepoRoot(): string | null {
@@ -174,8 +220,13 @@ async function main() {
   // (ex. insula sur 3000/5173, negroni sur 3001/5174).
   const currentFrontend = parseInt(existing.FRONTEND_PORT ?? '0', 10) || 0
   const currentBackend = parseInt(existing.BACKEND_PORT ?? '0', 10) || 0
-  const frontendPort = await pickPort(currentFrontend, FRONTEND_DEFAULT, new Set([currentBackend]))
-  const backendPort = await pickPort(currentBackend, BACKEND_DEFAULT, new Set([frontendPort]))
+
+  // Les ports des projets voisins sont ecartes a l'allocation : sans ca, un
+  // projet eteint se fait voler les siens et les deux se disputent le port au
+  // redemarrage. isFree() seul ne suffit pas — il ne voit que l'instant T.
+  const taken = reservedByOtherProjects()
+  const frontendPort = await pickPort(currentFrontend, FRONTEND_DEFAULT, currentBackend, taken)
+  const backendPort = await pickPort(currentBackend, BACKEND_DEFAULT, frontendPort, taken)
 
   const updates: Record<string, string> = {
     FRONTEND_PORT: String(frontendPort),
