@@ -37,7 +37,13 @@ Demander via `AskUserQuestion`, dans l'ordre (afficher les valeurs détectées e
 
 1. **Service name** — kebab-case, slug du projet (default: nom du repo). Sert d'identifiant Kamal, de nom de container, et de préfixe registry. Ex: `corseo`.
 
-2. **SSH host** — Tailscale IP (recommandé, ex `100.64.77.59`) ou IP/hostname public. Sert pour `kamal deploy`.
+2. **SSH host** — **le nom MagicDNS Tailscale du serveur** (`<machine>.<tailnet>.ts.net`, ex `flow.tail5e0501.ts.net`).
+   À récupérer avec `tailscale status`, jamais à recopier de mémoire.
+
+   Ni IP Tailscale ni IP publique : le port 22 des serveurs est fermé au monde et
+   n'accepte que `100.64.0.0/10`, donc un host public ne se connecte pas ; et une IP
+   en dur se périme dès que la machine change d'adresse dans le tailnet. Le nom, lui,
+   suit. (C'est une IP recopiée ici qui s'était propagée dans quatre projets.)
 
 3. **SSH user** — default `debian` (sudo). Si serveur fresh, `root` peut être acceptable.
 
@@ -55,10 +61,18 @@ Demander via `AskUserQuestion`, dans l'ordre (afficher les valeurs détectées e
    - `mapbox` → `VITE_MAPBOX_TOKEN` (build arg côté web)
    - aucun
 
+## Step 1 bis — `bin/deploy` ne se génère pas
+
+Le script de déploiement vient de **flow-core** (`~/Dev/vibe-stack/bin/deploy`) et est
+identique dans tous les projets : il ne lit que `config/deploy.yml` et
+`.flow/project.json`. Ne pas en écrire un ici — c'est ainsi qu'on s'est retrouvé avec
+trois versions divergentes dont une seule refusait de publier un arbre de travail sale.
+Le copier tel quel, et corriger dans flow-core si quelque chose manque.
+
 ## Step 2 — Générer les Dockerfiles (si absents)
 
 ### Dockerfile.api
-Si NOT_FOUND : lire `~/.claude/skills/deploy-setup/templates/Dockerfile.api.template` et créer `Dockerfile.api`. Remplacer `{SHARED_PKG_NAME}` par le nom du package shared (lu depuis `packages/shared/package.json`).
+Si NOT_FOUND : lire `templates/Dockerfile.api.template` (dossier `templates/` de ce skill) et créer `Dockerfile.api`. Remplacer `{SHARED_PKG_NAME}` par le nom du package shared (lu depuis `packages/shared/package.json`).
 
 **Règles critiques** (à respecter dans le template) :
 - Stage 2 (build) copie uniquement `packages/shared/`, `apps/api/`, et `prisma/` (jamais `COPY . .` — `apps/web/` ferait crasher SWC).
@@ -67,7 +81,7 @@ Si NOT_FOUND : lire `~/.claude/skills/deploy-setup/templates/Dockerfile.api.temp
 - `--mount=type=cache` est OK en CI (buildx), pas en local.
 
 ### Dockerfile.web
-Si NOT_FOUND : lire `~/.claude/skills/deploy-setup/templates/Dockerfile.web.template` et créer.
+Si NOT_FOUND : lire `templates/Dockerfile.web.template` et créer.
 
 ### Dockerfile.web.kamal (overlay)
 Si NOT_FOUND : lire `templates/Dockerfile.web.kamal.template`, remplacer `{REGISTRY_ORG}` et `{SERVICE_NAME}`, créer à la racine.
